@@ -2000,6 +2000,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   var noProxy = tomato.get("noProxy");
 
   var delivery;
+  var validAddress = true;
   var mino;
   var meals;
 
@@ -2013,6 +2014,8 @@ if(!ordrin.hasOwnProperty("emitter")){
   var TrayItem = api.TrayItem;
   var Tray = api.Tray;
   var Address = api.Address;
+
+  var OuterToggledElt = null;
 
   function getRid(){
     return tomato.get("rid");
@@ -2059,7 +2062,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     return tomato.hasKey("address") && tomato.get("address").addr;
   }
 
-  var addressTemplate="{{addr}}<br>{{#addr2}}{{addr2}}<br>{{/addr2}}{{city}}, {{state}} {{zip}}<br>{{phone}}<br><a data-listener=\"editAddress\">Edit</a>";
+  var addressTemplate='{{addr}}<br>{{#addr2}}{{addr2}}<br>{{/addr2}}{{city}}, {{state}} {{zip}}<br><span class="phoneDisplay">{{phone}}<br></span><a data-listener="editAddress">Edit</a>';
 
   function setAddress(address){
     tomato.set("address", address);
@@ -2183,6 +2186,19 @@ if(!ordrin.hasOwnProperty("emitter")){
     tray = newTray;
     tomato.set("tray", tray);
   }
+
+  function initTrayFromString(str) {
+    var newtray = buildTrayFromString(str),
+      id;
+
+    if(newtray.items) {
+      for(id in newtray.items) {
+        if(newtray.items.hasOwnProperty(id)) {
+          addTrayItem(newtray.items[id]);
+        }
+      }
+    }
+  };
 
   function getTip(){
     return tomato.get("tip") ? tomato.get("tip") : 0.00;
@@ -2450,8 +2466,14 @@ if(!ordrin.hasOwnProperty("emitter")){
   tomato.register("ordrinApi", [Option, TrayItem, Tray, Address])
 
   function updateTip(){
-    var tip = toCents(getElementsByClassName(elements.menu, "tipInput")[0].value+"");
-    tomato.set("tip", tip);
+    var tipNodes = getElementsByClassName(elements.menu, "tipInput"),
+        tip;
+
+    if( tipNodes && tipNodes.length > 0 ) {
+      tip = toCents(tipNodes[0].value+"");
+      tomato.set("tip", tip);
+    }
+
     updateFee();
   }
 
@@ -2487,8 +2509,20 @@ if(!ordrin.hasOwnProperty("emitter")){
     } else {
       api.restaurant.getFee(getRid(), toDollars(subtotal), toDollars(tip), getDeliveryTime(), getAddress(), function(err, data){
         if(err){
-          handleError(err);
+          return handleError(err);
+
+        } else if(data.msg) {
+          return handleError(data);
+
+        } else if(data._msg) {
+          if( data._msg.match( /normalize/i ) ) {
+            validAddress = false;
+            return handleError( {msg: "We could not find your address, please check it and try again."} );
+          }
+          return handleError({msg:data._msg});
+
         } else {
+          validAddress = true;
           var deliveryTime = getElementsByClassName(elements.menu, "deliveryTimeValue");
           for( var i = 0; i < deliveryTime.length; i++ ) {
             deliveryTime[i].innerHTML = data.del ? data.del : 'TBD';
@@ -2530,15 +2564,25 @@ if(!ordrin.hasOwnProperty("emitter")){
 
   function hideElement(element){
     element.className += " hidden";
+    if(element == OuterToggledElt) {
+      OuterToggledElt = null;
+    }
   }
 
-  function unhideElement(element){
+  function unhideElement(element, hasOuterToggle){
     element.className = element.className.replace(/\s?\bhidden\b\s?/g, ' ').replace(/(\s){2,}/g, '$1');
+    if( hasOuterToggle ) {
+      OuterToggledElt = element;
+    }
   }
 
-  function toggleHideElement(element){
+  //hasOuterToggle means the dialog closes if they click anywhere outside of the dialog
+  //hasOuterToggle really onlly matters for unhiding - since hide can check for equality
+  //unhide instead of show makes me sad
+  function toggleHideElement(element, hasOuterToggle ){
+    hasOuterToggle = hasOuterToggle === true ? true : false;
     if(/\bhidden\b/.test(element.className)){
-      unhideElement(element);
+      unhideElement(element, hasOuterToggle);
     } else {
       hideElement(element);
     }
@@ -2682,13 +2726,27 @@ if(!ordrin.hasOwnProperty("emitter")){
       confirmOrder : confirmOrder
     }
     var node = event.srcElement;
+
+        //if we have a live toggled node and the clicked element is *not* a child
+        //of that node then we want to short circuit and hit the toggle
+    var isChildOfToggledElt = OuterToggledElt ? OuterToggledElt.contains(node) : false,
+        doToggle            = OuterToggledElt && ! isChildOfToggledElt;
+
     while(!node.hasAttribute("data-listener")){
       if(node.tagName.toUpperCase() === "HTML"){
+        //if we reach the top of the page w/out a listener, check for toggle
+        if( doToggle ) { toggleHideElement( OuterToggledElt ) }
         return;
       }
       node = node.parentNode;
     }
     var name = node.getAttribute("data-listener");
+
+    //if we found a listener, ignore it if we're supposed to toggle
+    if( doToggle ) {
+      toggleHideElement( OuterToggledElt );
+      return;
+    }
 
     if (typeof routes[name] != "undefined"){
       routes[name](node);
@@ -2701,9 +2759,13 @@ if(!ordrin.hasOwnProperty("emitter")){
       handleError({msg:"No address set"});
       return;
     }
+
+    if( ! validAddress ) {
+      return handleError({msg:"The restaurant does not deliver to your address."});
+    }
+
     if(!delivery){
-      handleError({msg:"The restaurant is not open for online ordering at this time"});
-      return;
+      return handleError({msg:"The restaurant is not open for online ordering at this time."});
     }
 
     if( getTray().getTotal() < ( mino * 100 ) ) {
@@ -2726,11 +2788,11 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function showAddressForm(){
-    toggleHideElement(getElementsByClassName(elements.menu, "addressForm")[0]);
+    toggleHideElement(getElementsByClassName(elements.menu, "addressForm")[0], true );
   }
 
   function showDateTimeForm(){
-    toggleHideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0]);
+    toggleHideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0], true );
     dateSelected();
   }
 
@@ -2837,6 +2899,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     if( isAvailable ) {
       buildDialogBox(itemId);
       showDialogBox( node );
+      emitter.emit('menuitem.shown', true);
       hideErrorDialog();
     } else {
       showErrorDialog("Sorry, this item is not currently available");
@@ -2863,6 +2926,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     quantity.setAttribute("value", trayItem.quantity);
     elements.dialog.setAttribute("data-tray-id", trayItemId);
     showDialogBox( node );
+    emitter.emit('menuitem.shown', true);
   }
 
   function buildDialogBox(id){
@@ -2911,14 +2975,14 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     if(checked<min){
       error = true;
-      var errorText = "You must select at least "+min+" options";
+      var errorText = "You must select at least "+min+" option" + (min === 1 ? '' : 's');
       var error = document.createTextNode(errorText);
       errorNode.appendChild(error);
       return false;
     }
     if(max>0 && checked>max){
       error = true;
-      var errorText = "You must select at most "+max+" options";
+      var errorText = "You must select at most "+max+" option" + (min === 1 ? '' : 's');
       var error = document.createTextNode(errorText);
       errorNode.appendChild(error);
       return false;
@@ -3067,13 +3131,15 @@ if(!ordrin.hasOwnProperty("emitter")){
       setDeliveryTime : setDeliveryTime,
       getTray : getTray,
       setTray : setTray,
+      initTrayFromString : initTrayFromString,
       updateTip : updateTip,
       getTip : getTip,
-      setRestaurant : setRestaurant
+      setRestaurant : setRestaurant,
+      clicked : clicked
     };
     emitter.on("tray.add", addTrayItemNode);
     emitter.on("tray.remove", removeTrayItemNode);
-    emitter.on("tray.*", updateFee);
+    emitter.on("tray.*", updateTip);
     emitter.emit("moduleLoaded.mustard", ordrin.mustard);
   };
   
