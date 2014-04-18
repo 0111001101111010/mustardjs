@@ -196,7 +196,7 @@
       name = type.shift();
     }
     return true;
-  };
+  }
 
   // By default EventEmitters will print a warning if more than
   // 10 listeners are added to it. This is a useful default which
@@ -231,7 +231,7 @@
         self.off(event, listener);
       }
       fn.apply(this, arguments);
-    };
+    }
 
     listener._origin = fn;
 
@@ -439,7 +439,7 @@
         }
 
         if(this.wildcard) {
-          leaf._listeners.splice(position, 1)
+          leaf._listeners.splice(position, 1);
         }
         else {
           this._events[type].splice(position, 1);
@@ -552,7 +552,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
     var store = {};
     var namespace = {};
 
-    var builtin = {Array:true, String:true, Number:true, Boolean:true, Object:true}
+    var builtin = {Array:true, String:true, Number:true, Boolean:true, Object:true};
 
     function isCustomObject(obj){
       if(typeof obj === "object" && obj !== null){
@@ -633,7 +633,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
           }
         }
       }
-    }
+    };
 
     this.get = function(key){
       if(this.hasKey(key)){
@@ -643,22 +643,22 @@ if(!ordrin.hasOwnProperty("Tomato")){
       }
 
       return undefined;
-    }
+    };
 
     this.hasKey = function(key){
       return store.hasOwnProperty(key);
-    }
+    };
 
     this.set = function(key, value){
-      var val = {}
+      var val = {};
       val.value = JSON.stringify(value, replacer);
       store[key] = val;
       return value;
-    }
+    };
 
     this.remove = function(key){
       delete store[key];
-    }
+    };
 
     this.keys = function(){
       var keys = [];
@@ -667,7 +667,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
           return keys;
         }
       }
-    }
+    };
     if(typeof ordrin.init === "object"){
       for(var prop in ordrin.init){
         if(ordrin.init.hasOwnProperty(prop)){
@@ -675,7 +675,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
         }
       }
     }
-  }
+  };
 }
 var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
 
@@ -780,7 +780,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         }
         callback(null, JSON.parse(req.responseText));
       }
-    }
+    };
     req.open(method, host+uri, false);
 
     if (method != "GET"){
@@ -809,8 +809,8 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       var uriString = buildUriString(uri, params);
       
       makeApiRequest(restaurantUrl, uriString, method, data, callback);
-    }
-  }
+    };
+  };
   Restaurant.prototype.getDeliveryList = function getDeliveryList(dateTime, address, callback){
     dateTime = this.parseDateTime(dateTime);
 
@@ -826,7 +826,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
     ];
 
     this.makeRestaurantRequest("/dl", params, {}, "GET", callback);
-  }
+  };
 
   Restaurant.prototype.getDeliveryCheck = function getDeliveryCheck(restaurantId, dateTime, address, callback){
     dateTime = this.parseDateTime(dateTime);
@@ -841,10 +841,10 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       address.zip,
       address.city,
       address.addr
-    ]
+    ];
 
     this.makeRestaurantRequest("/dc", params, {}, "GET", callback);
-  }
+  };
 
   Restaurant.prototype.getFee = function getFee(restaurantId, subtotal, tip, dateTime, address, callback){
     dateTime = this.parseDateTime(dateTime);
@@ -861,14 +861,14 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       address.zip,
       address.city,
       address.addr
-    ]
+    ];
 
     this.makeRestaurantRequest("/fee", params, {}, "GET", callback);
-  }
+  };
 
   Restaurant.prototype.getDetails = function getDetails(restaurantId, callback){
     this.makeRestaurantRequest("/rd", [restaurantId], {}, "GET", callback);
-  }
+  };
   
   Restaurant.prototype.parseDateTime = function rest_parseDateTime(dateTime, callback){
     var delivery = parseDateTime(dateTime);
@@ -881,26 +881,26 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         return delivery.date+'+'+delivery.time;
       }
     }
-  }
+  };
 
   // one validation error for a specific field. Used in ValidationError class
   var FieldError = function FieldError(field, msg){
     this.field = field;
     this.msg   = msg;
-  }
+  };
 
   // extends the Error object, and is thrown whenever an Object fails validation. Can contain multiple field errors.
   var ValidationError = function ValidationError(name, msg, errors){
     Error.apply(this, arguments);
     this.fields = {};
-  }
+  };
 
   // takes an array of FieldErrors and adds them to the field object
   ValidationError.prototype.addFields = function addFields(fieldErrors){
     for (var i = 0; i < fieldErrors.length; i++){
       this.fields[fieldErrors[i].field] = fieldErrors[i].msg;
     }
-  }
+  };
 
   var Order = function Order(orderUrl){
     this.placeOrder = function placeOrder(restaurantId, tray, tip, deliveryTime, firstName, lastName, address, creditCard, email, callback){
@@ -941,8 +941,8 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
 
       var uriString = buildUriString("/o", params);
       makeApiRequest(orderUrl, uriString, "POST",  data, callback);
-    }
-  }
+    };
+  };
 
   var Address = function Address(addr, city, state, zip, phone, addr2){
     if( addr === undefined ) {
@@ -987,13 +987,13 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         error.addFields(fieldErrors);
         throw error;
       }
-    }
+    };
 
     var formatPhoneNumber = function formatPhoneNumber(){
       that.phone = that.phone.substring(0, 3) + "-" + that.phone.substring(3, 6) + "-" + that.phone.substring(6);
-    }
+    };
     validate();
-  }
+  };
 
   var CreditCard = function CreditCard(name, expiryMonth, expiryYear, billAddress, number, cvc){
     this.name        = name;
@@ -1039,7 +1039,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         error.addFields(fieldErrors);
         throw error;
       }
-    }
+    };
 
     // credit card validation checksum. From http://typicalprogrammer.com/?p=4
     var checkLuhn = function checkLuhn(){
@@ -1062,7 +1062,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         alt = !alt;
       }
       return total % 10 == 0;
-    }
+    };
 
     // credit card tpype check. From http://typicalprogrammer.com/?p=4
     var creditCardType = function creditCardType(){
@@ -1085,14 +1085,14 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
           return type;
       }
       return 'unknown';
-    }
+    };
 
     this.formatExpirationDate = function formatExpirationDate(){
       return this.expiryMonth + "/" + this.expiryYear;
-    }
+    };
 
     validate();
-  }
+  };
 
   function toCents(value){
     if( !value ) {
@@ -1144,7 +1144,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
     if(price !== undefined){
       this.price = toCents(price);
     }
-  }
+  };
 
   var nextId = 0;
 
@@ -1172,7 +1172,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         this.quantityPrice = toDollars(this.quantity * this.price);
       }
     }
-  }
+  };
 
   TrayItem.prototype.getOptionIds = function getOptionIds(){
     var ids = [];
@@ -1180,7 +1180,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       ids.push(this.options[i].id);
     }
     return ids;
-  }
+  };
 
   TrayItem.prototype.hasOptionSelected = function hasOptionSelected(id){
     for(var i=0; i<this.options.length; i++){
@@ -1189,13 +1189,13 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       }
     }
     return false;
-  }
+  };
   
   TrayItem.prototype.buildItemString = function buildItemString(){
     var string = this.id + "/" + this.quantity;
     string += "," + this.getOptionIds().join(',');
     return string;
-  }
+  };
 
   TrayItem.prototype.getTotalPrice = function getTotalPrice(){
     var price = this.price;
@@ -1203,7 +1203,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       price += this.options[i].price;
     }
     return price*this.quantity;
-  }
+  };
 
   var Tray = function Tray(items){
     this.items = items || {};
@@ -1221,7 +1221,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       }
     }
     return string.substring(1); // remove that first plus
-  }
+  };
 
   Tray.prototype.addItem = function addItem(item){
     this.items[item.trayItemId] = item;
@@ -2001,7 +2001,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     tomato.set("invisible", false);
   }
 
-  var invisible = tomato.get("invisible");
+  var invisible = false; //tomato.get("invisible");
 
   var noProxy = tomato.get("noProxy");
 
