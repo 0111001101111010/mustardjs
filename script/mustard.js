@@ -2001,7 +2001,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     tomato.set("invisible", false);
   }
 
-  var invisible = false; //tomato.get("invisible");
+  var invisible = tomato.get("invisible");
 
   var noProxy = tomato.get("noProxy");
 
@@ -2231,6 +2231,7 @@ if(!ordrin.hasOwnProperty("emitter")){
       if( !invisible ) {
         renderMenu(newMenu);
       }
+      processNewMenuPage();
     } else {
       if(!noProxy){
         api.restaurant.getDetails(rid, function(err, data){
@@ -2359,7 +2360,6 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     var confirmHtml = Mustache.render(tomato.get("confirmTemplate"), data);
     confirmDiv.innerHTML = confirmHtml;
-    processNewMenuPage();
   }
 
   function initConfirmPage(){
@@ -2371,6 +2371,7 @@ if(!ordrin.hasOwnProperty("emitter")){
       if( !invisible ) {
         renderConfirm(getTray());
       }
+      processNewMenuPage();
     } else {
       api.restaurant.getDetails(getRid(), function(err, data){
         setMenu(data.menu);
@@ -2382,6 +2383,7 @@ if(!ordrin.hasOwnProperty("emitter")){
         if( !invisible ) {
           renderConfirm(getTray(), getDetails());
         }
+        processNewMenuPage();
       });
     }
   }
