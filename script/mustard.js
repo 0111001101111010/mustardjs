@@ -2742,6 +2742,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function initializeDateForm(){
+    var parts, timepart, thehour, thedate, thetime, thehalf;
     var form = document.forms["ordrinDateTime"];
     if( !form || !form.date ) {
       return;
@@ -2784,7 +2785,7 @@ if(!ordrin.hasOwnProperty("emitter")){
         thehalf = 'AM';
       }
       form.time.value = [thehour,timepart[1]].join(':');
-      form.apmp.value = thehalf;
+      form.ampm.value = thehalf;
     }
   }
 
