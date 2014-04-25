@@ -2765,6 +2765,27 @@ if(!ordrin.hasOwnProperty("emitter")){
     option.setAttribute("value", padLeft(date.getMonth()+1, 2)+'-'+padLeft(date.getDate(), 2));
     option.innerHTML = months[date.getMonth()]+" "+date.getDate()+', '+days[date.getDay()];
     form.date.appendChild(option);
+
+    parts = ordrin.init.deliveryTime.split('+');
+    if( parts.length === 2 ) {
+      thedate = parts[0];
+      form.date.value = thedate;
+
+      timepart = parts[1].split(':');
+      thehour = parseInt( timepart[0], 10 );
+      if( thehour > 12 ) {
+        thehour = padLeft(thehour - 12, 2);
+        thehalf = 'PM';
+      } else if( thehour === 12 ) {
+        thehour = padLeft(thehour, 2);
+        thehalf = 'PM';
+      } else {
+        thehour = padLeft(thehour, 2);
+        thehalf = 'AM';
+      }
+      form.time.value = [thehour,timepart[1]].join(':');
+      form.apmp.value = thehalf;
+    }
   }
 
   function clicked(event){
