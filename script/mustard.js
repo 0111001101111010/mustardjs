@@ -2284,7 +2284,6 @@ if(!ordrin.hasOwnProperty("emitter")){
     var menuHtml = Mustache.render(tomato.get("menuTemplate"), data);
 
     menu_div.innerHTML = menuHtml;
-    processNewMenuPage();
   }
 
   
