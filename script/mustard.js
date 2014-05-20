@@ -196,7 +196,7 @@
       name = type.shift();
     }
     return true;
-  };
+  }
 
   // By default EventEmitters will print a warning if more than
   // 10 listeners are added to it. This is a useful default which
@@ -231,7 +231,7 @@
         self.off(event, listener);
       }
       fn.apply(this, arguments);
-    };
+    }
 
     listener._origin = fn;
 
@@ -439,7 +439,7 @@
         }
 
         if(this.wildcard) {
-          leaf._listeners.splice(position, 1)
+          leaf._listeners.splice(position, 1);
         }
         else {
           this._events[type].splice(position, 1);
@@ -552,7 +552,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
     var store = {};
     var namespace = {};
 
-    var builtin = {Array:true, String:true, Number:true, Boolean:true, Object:true}
+    var builtin = {Array:true, String:true, Number:true, Boolean:true, Object:true};
 
     function isCustomObject(obj){
       if(typeof obj === "object" && obj !== null){
@@ -633,7 +633,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
           }
         }
       }
-    }
+    };
 
     this.get = function(key){
       if(this.hasKey(key)){
@@ -643,22 +643,22 @@ if(!ordrin.hasOwnProperty("Tomato")){
       }
 
       return undefined;
-    }
+    };
 
     this.hasKey = function(key){
       return store.hasOwnProperty(key);
-    }
+    };
 
     this.set = function(key, value){
-      var val = {}
+      var val = {};
       val.value = JSON.stringify(value, replacer);
       store[key] = val;
       return value;
-    }
+    };
 
     this.remove = function(key){
       delete store[key];
-    }
+    };
 
     this.keys = function(){
       var keys = [];
@@ -667,7 +667,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
           return keys;
         }
       }
-    }
+    };
     if(typeof ordrin.init === "object"){
       for(var prop in ordrin.init){
         if(ordrin.init.hasOwnProperty(prop)){
@@ -675,7 +675,7 @@ if(!ordrin.hasOwnProperty("Tomato")){
         }
       }
     }
-  }
+  };
 }
 var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
 
@@ -780,7 +780,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         }
         callback(null, JSON.parse(req.responseText));
       }
-    }
+    };
     req.open(method, host+uri, false);
 
     if (method != "GET"){
@@ -809,8 +809,8 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       var uriString = buildUriString(uri, params);
       
       makeApiRequest(restaurantUrl, uriString, method, data, callback);
-    }
-  }
+    };
+  };
   Restaurant.prototype.getDeliveryList = function getDeliveryList(dateTime, address, callback){
     dateTime = this.parseDateTime(dateTime);
 
@@ -826,7 +826,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
     ];
 
     this.makeRestaurantRequest("/dl", params, {}, "GET", callback);
-  }
+  };
 
   Restaurant.prototype.getDeliveryCheck = function getDeliveryCheck(restaurantId, dateTime, address, callback){
     dateTime = this.parseDateTime(dateTime);
@@ -841,10 +841,10 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       address.zip,
       address.city,
       address.addr
-    ]
+    ];
 
     this.makeRestaurantRequest("/dc", params, {}, "GET", callback);
-  }
+  };
 
   Restaurant.prototype.getFee = function getFee(restaurantId, subtotal, tip, dateTime, address, callback){
     dateTime = this.parseDateTime(dateTime);
@@ -861,14 +861,14 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       address.zip,
       address.city,
       address.addr
-    ]
+    ];
 
     this.makeRestaurantRequest("/fee", params, {}, "GET", callback);
-  }
+  };
 
   Restaurant.prototype.getDetails = function getDetails(restaurantId, callback){
     this.makeRestaurantRequest("/rd", [restaurantId], {}, "GET", callback);
-  }
+  };
   
   Restaurant.prototype.parseDateTime = function rest_parseDateTime(dateTime, callback){
     var delivery = parseDateTime(dateTime);
@@ -881,26 +881,26 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         return delivery.date+'+'+delivery.time;
       }
     }
-  }
+  };
 
   // one validation error for a specific field. Used in ValidationError class
   var FieldError = function FieldError(field, msg){
     this.field = field;
     this.msg   = msg;
-  }
+  };
 
   // extends the Error object, and is thrown whenever an Object fails validation. Can contain multiple field errors.
   var ValidationError = function ValidationError(name, msg, errors){
     Error.apply(this, arguments);
     this.fields = {};
-  }
+  };
 
   // takes an array of FieldErrors and adds them to the field object
   ValidationError.prototype.addFields = function addFields(fieldErrors){
     for (var i = 0; i < fieldErrors.length; i++){
       this.fields[fieldErrors[i].field] = fieldErrors[i].msg;
     }
-  }
+  };
 
   var Order = function Order(orderUrl){
     this.placeOrder = function placeOrder(restaurantId, tray, tip, deliveryTime, firstName, lastName, address, creditCard, email, callback){
@@ -941,8 +941,8 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
 
       var uriString = buildUriString("/o", params);
       makeApiRequest(orderUrl, uriString, "POST",  data, callback);
-    }
-  }
+    };
+  };
 
   var Address = function Address(addr, city, state, zip, phone, addr2){
     if( addr === undefined ) {
@@ -987,13 +987,13 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         error.addFields(fieldErrors);
         throw error;
       }
-    }
+    };
 
     var formatPhoneNumber = function formatPhoneNumber(){
       that.phone = that.phone.substring(0, 3) + "-" + that.phone.substring(3, 6) + "-" + that.phone.substring(6);
-    }
+    };
     validate();
-  }
+  };
 
   var CreditCard = function CreditCard(name, expiryMonth, expiryYear, billAddress, number, cvc){
     this.name        = name;
@@ -1039,7 +1039,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         error.addFields(fieldErrors);
         throw error;
       }
-    }
+    };
 
     // credit card validation checksum. From http://typicalprogrammer.com/?p=4
     var checkLuhn = function checkLuhn(){
@@ -1062,7 +1062,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         alt = !alt;
       }
       return total % 10 == 0;
-    }
+    };
 
     // credit card tpype check. From http://typicalprogrammer.com/?p=4
     var creditCardType = function creditCardType(){
@@ -1085,14 +1085,14 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
           return type;
       }
       return 'unknown';
-    }
+    };
 
     this.formatExpirationDate = function formatExpirationDate(){
       return this.expiryMonth + "/" + this.expiryYear;
-    }
+    };
 
     validate();
-  }
+  };
 
   function toCents(value){
     if( !value ) {
@@ -1144,7 +1144,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
     if(price !== undefined){
       this.price = toCents(price);
     }
-  }
+  };
 
   var nextId = 0;
 
@@ -1172,7 +1172,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
         this.quantityPrice = toDollars(this.quantity * this.price);
       }
     }
-  }
+  };
 
   TrayItem.prototype.getOptionIds = function getOptionIds(){
     var ids = [];
@@ -1180,7 +1180,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       ids.push(this.options[i].id);
     }
     return ids;
-  }
+  };
 
   TrayItem.prototype.hasOptionSelected = function hasOptionSelected(id){
     for(var i=0; i<this.options.length; i++){
@@ -1189,13 +1189,13 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       }
     }
     return false;
-  }
+  };
   
   TrayItem.prototype.buildItemString = function buildItemString(){
     var string = this.id + "/" + this.quantity;
     string += "," + this.getOptionIds().join(',');
     return string;
-  }
+  };
 
   TrayItem.prototype.getTotalPrice = function getTotalPrice(){
     var price = this.price;
@@ -1203,7 +1203,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       price += this.options[i].price;
     }
     return price*this.quantity;
-  }
+  };
 
   var Tray = function Tray(items){
     this.items = items || {};
@@ -1221,7 +1221,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
       }
     }
     return string.substring(1); // remove that first plus
-  }
+  };
 
   Tray.prototype.addItem = function addItem(item){
     this.items[item.trayItemId] = item;
@@ -1997,9 +1997,16 @@ if(!ordrin.hasOwnProperty("emitter")){
 
   var render = tomato.get("render");
 
+  if(!tomato.hasKey("invisible")){
+    tomato.set("invisible", false);
+  }
+
+  var invisible = tomato.get("invisible");
+
   var noProxy = tomato.get("noProxy");
 
   var delivery;
+  var validAddress = true;
   var mino;
   var meals;
 
@@ -2013,6 +2020,8 @@ if(!ordrin.hasOwnProperty("emitter")){
   var TrayItem = api.TrayItem;
   var Tray = api.Tray;
   var Address = api.Address;
+
+  var OuterToggledElt = null;
 
   function getRid(){
     return tomato.get("rid");
@@ -2059,15 +2068,20 @@ if(!ordrin.hasOwnProperty("emitter")){
     return tomato.hasKey("address") && tomato.get("address").addr;
   }
 
-  var addressTemplate="{{addr}}<br>{{#addr2}}{{addr2}}<br>{{/addr2}}{{city}}, {{state}} {{zip}}<br>{{phone}}<br><a data-listener=\"editAddress\">Edit</a>";
+  var addressTemplate= tomato.hasKey("addressTemplate")
+                      ? tomato.get("addressTemplate")
+                      : '{{addr}}<br>{{#addr2}}{{addr2}}<br>{{/addr2}}{{city}}, {{state}} {{zip}}<br><span class="phoneDisplay">{{phone}}<br></span><a data-listener="editAddress">Edit</a>';
 
   function setAddress(address){
     tomato.set("address", address);
     switch(page){
       case "confirm":
       case "menu":
-        var addressHtml = Mustache.render(addressTemplate, address);
-        getElementsByClassName(elements.menu, "address")[0].innerHTML = addressHtml;
+        var addressElement = getElementsByClassName(elements.menu, "address")[0];
+        if( addressElement ) {
+          var addressHtml = Mustache.render(addressTemplate, address);
+          addressElement.innerHTML = addressHtml;
+        }
         updateFee();
         break;
       case "restaurants": downloadRestaurants(); break;
@@ -2092,7 +2106,9 @@ if(!ordrin.hasOwnProperty("emitter")){
     switch(page){
       case "confirm":
       case "menu": 
-        getElementsByClassName(elements.menu, "dateTime")[0].innerHTML = formatDeliveryTime( deliveryTime ); 
+        if( !invisible ) {
+          getElementsByClassName(elements.menu, "dateTime")[0].innerHTML = formatDeliveryTime( deliveryTime ); 
+        }
         updateFee(); 
         break;
       case "restaurants": downloadRestaurants(); break;
@@ -2184,11 +2200,25 @@ if(!ordrin.hasOwnProperty("emitter")){
     tomato.set("tray", tray);
   }
 
+  function initTrayFromString(str) {
+    var newtray = buildTrayFromString(str),
+      id;
+
+    if( newtray.items ) {
+      for( id in newtray.items ) {
+        if( newtray.items.hasOwnProperty(id) ) {
+          addTrayItem(newtray.items[id]);
+        }
+      }
+    }
+  };
+
   function getTip(){
     return tomato.get("tip") ? tomato.get("tip") : 0.00;
   }
 
   function setRestaurant(rid, newMenu, details){
+    page = "menu";
     setRid(rid);
     if(newMenu){
       if( details ) {
@@ -2198,14 +2228,19 @@ if(!ordrin.hasOwnProperty("emitter")){
       if(!trayExists() && tomato.hasKey("trayString")){
         setTray(buildTrayFromString(tomato.get("trayString")));
       } 
-      renderMenu(newMenu);
+      if( !invisible ) {
+        renderMenu(newMenu);
+      }
+      processNewMenuPage();
     } else {
       if(!noProxy){
         api.restaurant.getDetails(rid, function(err, data){
           setMenu(data.menu);
           delete data.menu;
           setDetails(data);
-          renderMenu(data.menu);
+          if( !invisible ) {
+            renderMenu(data.menu);
+          }
         });
       }
     }
@@ -2249,7 +2284,6 @@ if(!ordrin.hasOwnProperty("emitter")){
     var menuHtml = Mustache.render(tomato.get("menuTemplate"), data);
 
     menu_div.innerHTML = menuHtml;
-    processNewMenuPage();
   }
 
   
@@ -2325,15 +2359,18 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     var confirmHtml = Mustache.render(tomato.get("confirmTemplate"), data);
     confirmDiv.innerHTML = confirmHtml;
-    processNewMenuPage();
   }
 
   function initConfirmPage(){
+    page = "confirm";
     if(menuExists()){
       if(!trayExists()){
         setTray(buildTrayFromString(tomato.get("trayString")));
       }
-      renderConfirm(getTray());
+      if( !invisible ) {
+        renderConfirm(getTray());
+      }
+      processNewMenuPage();
     } else {
       api.restaurant.getDetails(getRid(), function(err, data){
         setMenu(data.menu);
@@ -2342,7 +2379,10 @@ if(!ordrin.hasOwnProperty("emitter")){
         if(!trayExists()){
           setTray(buildTrayFromString(tomato.get("trayString")));
         } 
-        renderConfirm(getTray(), getDetails());
+        if( !invisible ) {
+          renderConfirm(getTray(), getDetails());
+        }
+        processNewMenuPage();
       });
     }
   }
@@ -2370,7 +2410,9 @@ if(!ordrin.hasOwnProperty("emitter")){
         for(var i=0; i<data.length; i++){
           data[i].is_delivering = !!(data[i].is_delivering);
         }
-        renderRestaurants(data);
+        if( !invisible ) {
+          renderRestaurants(data);
+        }
       });
     }
   }
@@ -2450,8 +2492,14 @@ if(!ordrin.hasOwnProperty("emitter")){
   tomato.register("ordrinApi", [Option, TrayItem, Tray, Address])
 
   function updateTip(){
-    var tip = toCents(getElementsByClassName(elements.menu, "tipInput")[0].value+"");
-    tomato.set("tip", tip);
+    var tipNodes = getElementsByClassName(elements.menu, "tipInput"),
+        tip;
+
+    if( tipNodes && tipNodes.length > 0 ) {
+      tip = toCents(tipNodes[0].value+"");
+      tomato.set("tip", tip);
+    }
+
     updateFee();
   }
 
@@ -2469,13 +2517,30 @@ if(!ordrin.hasOwnProperty("emitter")){
       }
     }
 
+    var subtotalElem = getElementsByClassName(elements.menu, "subtotalValue")[0];
+    var tipElem = getElementsByClassName(elements.menu, "tipValue")[0];
+    var countElem = getElementsByClassName(elements.menu, "itemCount")[0];
+
     var subtotal = getTray().getSubtotal();
-    getElementsByClassName(elements.menu, "subtotalValue")[0].innerHTML = toDollars(subtotal);
+    if( subtotalElem ) {
+      subtotalElem.innerHTML = toDollars(subtotal);
+    }
+
+    if( countElem ) {
+      var size = function(obj) {
+        var size = 0, key;
+        for (key in obj) {
+          if (obj.hasOwnProperty(key)) size += obj[key].quantity;
+        }
+        return size;
+      };
+      countElem.innerHTML = size( getTray().items );
+    }
     var tip = getTip();
-    if( getElementsByClassName(elements.menu, "tipValue")[0].tagName === 'INPUT') {
-      getElementsByClassName(elements.menu, "tipValue")[0].value = toDollars(tip);
-    } else {
-      getElementsByClassName(elements.menu, "tipValue")[0].innerHTML = toDollars(tip);
+    if( tipElem && tipElem.tagName === 'INPUT') {
+      tipElem.value = toDollars(tip);
+    } else if(tipElem) {
+      tipElem.innerHTML = toDollars(tip);
     }
     if(noProxy){
       var total = subtotal + tip,
@@ -2488,7 +2553,20 @@ if(!ordrin.hasOwnProperty("emitter")){
       api.restaurant.getFee(getRid(), toDollars(subtotal), toDollars(tip), getDeliveryTime(), getAddress(), function(err, data){
         if(err){
           handleError(err);
+
+        } else if(data.msg) {
+          handleError(data);
+
+        } else if(data._msg) {
+          if( data._msg.match( /normalize/i ) ) {
+            validAddress = false;
+            handleError( {msg: "We could not find your address, please check it and try again."} );
+            return;
+          }
+          handleError({msg:data._msg});
+
         } else {
+          validAddress = true;
           var deliveryTime = getElementsByClassName(elements.menu, "deliveryTimeValue");
           for( var i = 0; i < deliveryTime.length; i++ ) {
             deliveryTime[i].innerHTML = data.del ? data.del : 'TBD';
@@ -2504,7 +2582,10 @@ if(!ordrin.hasOwnProperty("emitter")){
           for( var i = 0; i < feeValues.length; i++ ) {
             feeValues[i].innerHTML = data.fee ? data.fee : "TBD";
           }
-          getElementsByClassName(elements.menu, "taxValue")[0].innerHTML = data.tax ? data.tax : "0.00";
+          var taxElem = getElementsByClassName(elements.menu, "taxValue")[0];
+          if( taxElem ) {
+            taxElem.innerHTML = data.tax ? data.tax : "0.00";
+          }
           var total = subtotal + tip + toCents(data.fee) + toCents(data.tax),
               totalElements = getElementsByClassName(elements.menu, "totalValue")
               i;
@@ -2529,22 +2610,38 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function hideElement(element){
+    if( !element ) { return; }
     element.className += " hidden";
+    if(element == OuterToggledElt) {
+      OuterToggledElt = null;
+    }
   }
 
-  function unhideElement(element){
+  function unhideElement(element, hasOuterToggle){
+    if( !element ) { return; }
     element.className = element.className.replace(/\s?\bhidden\b\s?/g, ' ').replace(/(\s){2,}/g, '$1');
+    if( hasOuterToggle ) {
+      OuterToggledElt = element;
+    }
   }
 
-  function toggleHideElement(element){
+  //hasOuterToggle means the dialog closes if they click anywhere outside of the dialog
+  //hasOuterToggle really onlly matters for unhiding - since hide can check for equality
+  //unhide instead of show makes me sad
+  function toggleHideElement(element, hasOuterToggle ){
+    hasOuterToggle = hasOuterToggle === true ? true : false;
     if(/\bhidden\b/.test(element.className)){
-      unhideElement(element);
+      unhideElement(element, hasOuterToggle);
     } else {
       hideElement(element);
     }
   }
 
   function showErrorDialog(msg){
+    if( invisible ) {
+      console.log( msg );
+      return;
+    }
     // show background
     elements.errorBg.className = elements.errorBg.className.replace(/hidden/g, "");
 
@@ -2560,6 +2657,10 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
   
   function listen(evnt, elem, func) {
+    if( !elem ) {
+      return;
+    }
+
     if (elem.addEventListener)  // W3C DOM
       elem.addEventListener(evnt,func,false);
     else if (elem.attachEvent) { // IE DOM
@@ -2584,6 +2685,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function clearNode(node){
+    if( !node ) { return; }
     while(node.firstChild){
       node.removeChild(node.firstChild);
     }
@@ -2614,7 +2716,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function populateAddressForm(){
-    if(addressExists()){
+    if(addressExists() && document.forms["ordrinAddress"]){
       var address = getAddress();
       var form = document.forms["ordrinAddress"];
       form.addr.value = address.addr || '';
@@ -2639,9 +2741,13 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function initializeDateForm(){
+    var parts, timepart, thehour, thedate, thetime, thehalf;
+    var form = document.forms["ordrinDateTime"];
+    if( !form || !form.date ) {
+      return;
+    }
     var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    var form = document.forms["ordrinDateTime"];
     var date = new Date();
     var option = document.createElement("option");
     option.setAttribute("value", padLeft(date.getMonth()+1, 2)+'-'+padLeft(date.getDate(), 2));
@@ -2659,6 +2765,27 @@ if(!ordrin.hasOwnProperty("emitter")){
     option.setAttribute("value", padLeft(date.getMonth()+1, 2)+'-'+padLeft(date.getDate(), 2));
     option.innerHTML = months[date.getMonth()]+" "+date.getDate()+', '+days[date.getDay()];
     form.date.appendChild(option);
+
+    parts = ordrin.init.deliveryTime.split('+');
+    if( parts.length === 2 ) {
+      thedate = parts[0];
+      form.date.value = thedate;
+
+      timepart = parts[1].split(':');
+      thehour = parseInt( timepart[0], 10 );
+      if( thehour > 12 ) {
+        thehour = padLeft(thehour - 12, 2);
+        thehalf = 'PM';
+      } else if( thehour === 12 ) {
+        thehour = padLeft(thehour, 2);
+        thehalf = 'PM';
+      } else {
+        thehour = padLeft(thehour, 2);
+        thehalf = 'AM';
+      }
+      form.time.value = [thehour,timepart[1]].join(':');
+      form.ampm.value = thehalf;
+    }
   }
 
   function clicked(event){
@@ -2682,13 +2809,27 @@ if(!ordrin.hasOwnProperty("emitter")){
       confirmOrder : confirmOrder
     }
     var node = event.srcElement;
+
+        //if we have a live toggled node and the clicked element is *not* a child
+        //of that node then we want to short circuit and hit the toggle
+    var isChildOfToggledElt = OuterToggledElt ? OuterToggledElt.contains(node) : false,
+        doToggle            = OuterToggledElt && ! isChildOfToggledElt;
+
     while(!node.hasAttribute("data-listener")){
       if(node.tagName.toUpperCase() === "HTML"){
+        //if we reach the top of the page w/out a listener, check for toggle
+        if( doToggle ) { toggleHideElement( OuterToggledElt ) }
         return;
       }
       node = node.parentNode;
     }
     var name = node.getAttribute("data-listener");
+
+    //if we found a listener, ignore it if we're supposed to toggle
+    if( doToggle ) {
+      toggleHideElement( OuterToggledElt );
+      return;
+    }
 
     if (typeof routes[name] != "undefined"){
       routes[name](node);
@@ -2701,8 +2842,14 @@ if(!ordrin.hasOwnProperty("emitter")){
       handleError({msg:"No address set"});
       return;
     }
+
+    if( ! validAddress ) {
+      handleError({msg:"The restaurant does not deliver to your address."});
+      return;
+    }
+
     if(!delivery){
-      handleError({msg:"The restaurant is not open for online ordering at this time"});
+      handleError({msg:"The restaurant is not open for online ordering at this time."});
       return;
     }
 
@@ -2712,25 +2859,29 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
 
     var address = getAddress()
-    form.addr.value = address.addr || '';
-    form.addr2.value = address.addr2 || '';
-    form.city.value = address.city || '';
-    form.state.value = address.state || '';
-    form.zip.value = address.zip || '';
-    form.phone.value = address.phone || '';
-    form.dateTime.value = getDeliveryTime();
-    form.tray.value = getTray().buildTrayString();
-    form.tip.value = tomato.get("tip");
-    form.rid.value = getRid();
-    form.submit();
+    if( !invisible ) {
+      form.addr.value = address.addr || '';
+      form.addr2.value = address.addr2 || '';
+      form.city.value = address.city || '';
+      form.state.value = address.state || '';
+      form.zip.value = address.zip || '';
+      form.phone.value = address.phone || '';
+      form.dateTime.value = getDeliveryTime();
+      form.tray.value = getTray().buildTrayString();
+      form.tip.value = tomato.get("tip");
+      form.rid.value = getRid();
+      form.submit();
+    }
+
+    emitter.emit("order.confirmed", true);
   }
 
   function showAddressForm(){
-    toggleHideElement(getElementsByClassName(elements.menu, "addressForm")[0]);
+    toggleHideElement(getElementsByClassName(elements.menu, "addressForm")[0], true );
   }
 
   function showDateTimeForm(){
-    toggleHideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0]);
+    toggleHideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0], true );
     dateSelected();
   }
 
@@ -2801,6 +2952,9 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function getElementsByClassName(node, className){
+    if( !node ) {
+      return [];
+    }
     if(typeof node.getElementsByClassName !== "undefined"){
       return node.getElementsByClassName(className);
     }
@@ -2820,13 +2974,13 @@ if(!ordrin.hasOwnProperty("emitter")){
     var itemId = node.getAttribute("data-miid");
     var isAvailable = false;
 
-    for( var i = 0; i < allItems[itemId].availability.length; i++ ) {
+    for( var availMeal in allItems[itemId].availability ) {
       if( !meals ) {
         isAvailable = true;
         break;
       }
-      for( var j = 0; j < meals.length; j++ ) {
-        if( allItems[itemId].availability[ i ] == meals[ j ] ) {
+      for( var meal in meals) {
+        if( allItems[itemId].availability[ availMeal ] == meals[ meal ] ) { // check
           isAvailable = true;
           break;
         }
@@ -2837,9 +2991,10 @@ if(!ordrin.hasOwnProperty("emitter")){
     if( isAvailable ) {
       buildDialogBox(itemId);
       showDialogBox( node );
+      emitter.emit("menuitem.shown", true);
       hideErrorDialog();
     } else {
-      showErrorDialog("Sorry, this item is not currently available");
+      handleError( { msg : "Sorry, this item is not currently available" } );
     }
   }
 
@@ -2858,11 +3013,14 @@ if(!ordrin.hasOwnProperty("emitter")){
       checkbox.checked = trayItem.hasOptionSelected(optId);
     }
     var button = getElementsByClassName(elements.dialog, "buttonRed")[0];
-    button.setAttribute("value", "Save to Tray");
+    if( button ) {
+      button.setAttribute("value", "Save to Tray");
+    }
     var quantity = getElementsByClassName(elements.dialog, "itemQuantity")[0];
     quantity.setAttribute("value", trayItem.quantity);
     elements.dialog.setAttribute("data-tray-id", trayItemId);
     showDialogBox( node );
+    emitter.emit("menuitem.shown", true);
   }
 
   function buildDialogBox(id){
@@ -2911,14 +3069,14 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     if(checked<min){
       error = true;
-      var errorText = "You must select at least "+min+" options";
+      var errorText = "You must select at least "+min+" option" + (min === 1 ? '' : 's');
       var error = document.createTextNode(errorText);
       errorNode.appendChild(error);
       return false;
     }
     if(max>0 && checked>max){
       error = true;
-      var errorText = "You must select at most "+max+" options";
+      var errorText = "You must select at most "+max+" option" + (min === 1 ? '' : 's');
       var error = document.createTextNode(errorText);
       errorNode.appendChild(error);
       return false;
@@ -3008,6 +3166,10 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function handleError(error){
+    if( invisible ) {
+      emitter.emit("ordrin.error", error);
+      return;
+    }
     if(typeof error === "object" && typeof error.msg !== "undefined"){
       showErrorDialog(error.msg);
     } else if (typeof error === "object" && typeof error._msg !== "undefined") {
@@ -3025,6 +3187,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function addTrayItemNode(item){
+    if( !elements.tray ) { return; }
     var newNode = renderItemHtml(item);
     var pageTrayItems = getElementsByClassName(elements.tray, "trayItem");
     for(var i=0; i<pageTrayItems.length; i++){
@@ -3067,13 +3230,16 @@ if(!ordrin.hasOwnProperty("emitter")){
       setDeliveryTime : setDeliveryTime,
       getTray : getTray,
       setTray : setTray,
+      initTrayFromString : initTrayFromString,
       updateTip : updateTip,
       getTip : getTip,
-      setRestaurant : setRestaurant
+      setRestaurant : setRestaurant,
+      initConfirmPage : initConfirmPage,
+      clicked : clicked
     };
     emitter.on("tray.add", addTrayItemNode);
     emitter.on("tray.remove", removeTrayItemNode);
-    emitter.on("tray.*", updateFee);
+    emitter.on("tray.*", updateTip);
     emitter.emit("moduleLoaded.mustard", ordrin.mustard);
   };
   
