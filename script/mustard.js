@@ -2092,7 +2092,7 @@ if(!ordrin.hasOwnProperty("emitter")){
 
   function getFormattedDeliveryTime() {
     return formatDeliveryTime( tomato.get("deliveryTime") );
-  };
+  }
 
   function deliveryTimeExists(){
     return tomato.hasKey("deliveryTime");
@@ -2127,7 +2127,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
 
     if( ! (deliveryTime instanceof Date) ) {
-      deliveryParts = deliveryTime.match(/(\d+)\D+(\d+)\D+(\d+)\D(\d+)/)
+      deliveryParts = deliveryTime.match(/(\d+)\D+(\d+)\D+(\d+)\D(\d+)/);
       deliveryTime = new Date();
       deliveryTime.setMonth( parseInt( deliveryParts[1] ) - 1 );
       deliveryTime.setDate( deliveryParts[2] );
@@ -2189,7 +2189,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function trayExists(){
-    return tomato.hasKey("tray")
+    return tomato.hasKey("tray");
   }
 
   function setTray(newTray){
@@ -2208,7 +2208,7 @@ if(!ordrin.hasOwnProperty("emitter")){
         }
       }
     }
-  };
+  }
 
   function getTip(){
     return tomato.get("tip") ? tomato.get("tip") : 0.00;
@@ -2266,7 +2266,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   function renderMenu(menuData){
     var menu_div = document.getElementById("ordrinMenu");
     if( !menu_div ) {
-      setTimeout( function() { renderMenu(menuData), 1000 } );
+      setTimeout( function() { renderMenu(menuData); }, 1000 );
       return;
     }
 
@@ -2342,7 +2342,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   function renderConfirm(tray, details){
     var confirmDiv = document.getElementById("ordrinConfirm");
     if( !confirmDiv ) {
-      setTimeout( function() { renderConfirm(tray, details), 1000 } );
+      setTimeout( function() { renderConfirm(tray, details); }, 1000 );
       return;
     }
 
@@ -2486,7 +2486,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     return cents.substring(0, index) + '.' + cents.substring(index);
   }
 
-  tomato.register("ordrinApi", [Option, TrayItem, Tray, Address])
+  tomato.register("ordrinApi", [Option, TrayItem, Tray, Address]);
 
   function updateTip(){
     var tipNodes = getElementsByClassName(elements.menu, "tipInput"),
@@ -2541,7 +2541,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     if(noProxy){
       var total = subtotal + tip,
-          totalElements = getElementsByClassName(elements.menu, "totalValue")
+          totalElements = getElementsByClassName(elements.menu, "totalValue"),
           i;
         for( i = 0; i < totalElements.length; i++ ) { 
           totalElements[i].innerHTML = toDollars(total);
@@ -2570,7 +2570,7 @@ if(!ordrin.hasOwnProperty("emitter")){
           }
           var minOrder = getElementsByClassName(elements.menu, "minOrderValue");
           for( var j = 0; j < minOrder.length; j++ ) {
-            mino = data.mino ? data.mino : 'TBD'
+            mino = data.mino ? data.mino : 'TBD';
             minOrder[j].innerHTML = mino;
           }
 
@@ -2584,11 +2584,11 @@ if(!ordrin.hasOwnProperty("emitter")){
             taxElem.innerHTML = data.tax ? data.tax : "0.00";
           }
           var total = subtotal + tip + toCents(data.fee) + toCents(data.tax),
-              totalElements = getElementsByClassName(elements.menu, "totalValue")
+              totalElements = getElementsByClassName(elements.menu, "totalValue"),
               i;
           for( i = 0; i < totalElements.length; i++ ) {
             totalElements[i].innerHTML = toDollars(total);
-          };
+          }
           meals = data.meals;
           delivery = data.delivery;
           if(data.delivery === 0){
@@ -2598,7 +2598,7 @@ if(!ordrin.hasOwnProperty("emitter")){
             // unhide details element if it exists
             var featDetails = document.getElementById('feat-details');
             if( featDetails ) {
-              featDetails.className = featDetails.className.replace(/\s*hidden\s*/,'')
+              featDetails.className = featDetails.className.replace(/\s*hidden\s*/,'');
             }
           }
         }
@@ -2648,8 +2648,8 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function hideErrorDialog(){
-    hideElement(elements.errorBg)
-    hideElement(elements.errorDialog)
+    hideElement(elements.errorBg);
+    hideElement(elements.errorDialog);
     clearNode(getElementsByClassName(elements.errorDialog, "errorMsg")[0]);
   }
   
@@ -2667,7 +2667,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function goUntilParent(node, targetClass){
-    var re = new RegExp("\\b"+targetClass+"\\b")
+    var re = new RegExp("\\b"+targetClass+"\\b");
     if (node.className.match(re) === null){
       while(node.parentNode !== document){
         node = node.parentNode;
@@ -2730,7 +2730,7 @@ if(!ordrin.hasOwnProperty("emitter")){
       c = "0";
     }
     var str = ''+number;
-    var len = str.length
+    var len = str.length;
     for(var i=0; i<size-len; i++){
       str = c+str;
     }
@@ -2804,7 +2804,7 @@ if(!ordrin.hasOwnProperty("emitter")){
       editDeliveryTime : showDateTimeForm,
       closeError : hideErrorDialog,
       confirmOrder : confirmOrder
-    }
+    };
     var node = event.srcElement;
 
         //if we have a live toggled node and the clicked element is *not* a child
@@ -2815,7 +2815,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     while(!node.hasAttribute("data-listener")){
       if(node.tagName.toUpperCase() === "HTML"){
         //if we reach the top of the page w/out a listener, check for toggle
-        if( doToggle ) { toggleHideElement( OuterToggledElt ) }
+        if( doToggle ) { toggleHideElement( OuterToggledElt ); }
         return;
       }
       node = node.parentNode;
@@ -2855,7 +2855,7 @@ if(!ordrin.hasOwnProperty("emitter")){
       return;
     }
 
-    var address = getAddress()
+    var address = getAddress();
     if( !invisible ) {
       form.addr.value = address.addr || '';
       form.addr2.value = address.addr2 || '';
@@ -2900,7 +2900,7 @@ if(!ordrin.hasOwnProperty("emitter")){
       var time = padLeft(hours,2)+":"+padLeft(minutes,2);
       dateTime = date+"+"+time;
 
-      deliveryParts = dateTime.match(/(\d+)\D+(\d+)\D+(\d+)\D(\d+)/)
+      deliveryParts = dateTime.match(/(\d+)\D+(\d+)\D+(\d+)\D(\d+)/);
       deliveryTime = new Date();
       deliveryTime.setMonth( parseInt( deliveryParts[1] ) - 1 );
       deliveryTime.setDate( deliveryParts[2] );
@@ -3108,11 +3108,11 @@ if(!ordrin.hasOwnProperty("emitter")){
     var checkBoxes = getElementsByClassName(elements.dialog, "optionCheckbox");
     for(var i=0; i<checkBoxes.length; i++){
       if(checkBoxes[i].checked){
-        var listItem = goUntilParent(checkBoxes[i], "option")
+        var listItem = goUntilParent(checkBoxes[i], "option");
         var optionId = listItem.getAttribute("data-moid");
         var optionName = allItems[optionId].name;
         var optionPrice = allItems[optionId].price;
-        var option = new Option(optionId, optionName, optionPrice)
+        var option = new Option(optionId, optionName, optionPrice);
         options.push(option);
       }
     }
@@ -3238,7 +3238,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     emitter.on("tray.remove", removeTrayItemNode);
     emitter.on("tray.*", updateTip);
     emitter.emit("moduleLoaded.mustard", ordrin.mustard);
-  };
+  }
   
   init();
 })(ordrin.tomato, ordrin.emitter, ordrin.api, ordrin.Mustache);
