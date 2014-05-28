@@ -23,9 +23,18 @@ if(!ordrin.hasOwnProperty("emitter")){
 
   var render = tomato.get("render");
 
+  if(!tomato.hasKey("invisible")){
+    tomato.set("invisible", false);
+  }
+
+  var invisible = tomato.get("invisible");
+
   var noProxy = tomato.get("noProxy");
 
   var delivery;
+  var validAddress = true;
+  var mino;
+  var meals;
 
   var tray;
 
@@ -38,24 +47,8 @@ if(!ordrin.hasOwnProperty("emitter")){
   var Tray = api.Tray;
   var Address = api.Address;
 
-  function deliveryCheck(){
-    if(!noProxy){
-      api.restaurant.getDeliveryCheck(getRid(), getDeliveryTime(), getAddress(), function(err, data){
-        if(err){
-          handleError(err);
-        } else {
-          console.log(data);
-          delivery = data.delivery;
-          if(data.delivery === 0){
-            handleError(data);
-          }
-        }
-      });
-    } else {
-      delivery = true;
-    }
-  }
-  
+  var OuterToggledElt = null;
+
   function getRid(){
     return tomato.get("rid");
   }
@@ -81,23 +74,41 @@ if(!ordrin.hasOwnProperty("emitter")){
     allItems = extractAllItems(menu);
   }
 
+  function getDetails(){
+    return tomato.get("details");
+  }
+
+  function detailsExists(){
+    return tomato.hasKey("details");
+  }
+
+  function setDetails(details) {
+    return tomato.set("details", details);
+  }
+
   function getAddress(){
     return tomato.get("address");
   }
 
   function addressExists(){
-    return tomato.hasKey("address");
+    return tomato.hasKey("address") && tomato.get("address").addr;
   }
 
-  var addressTemplate="{{addr}}<br>{{#addr2}}{{this}}<br>{{/addr2}}{{city}}, {{state}} {{zip}}<br>{{phone}}<br><a data-listener=\"editAddress\">Edit</a>";
+  var addressTemplate= tomato.hasKey("addressTemplate")
+                      ? tomato.get("addressTemplate")
+                      : '{{addr}}<br>{{#addr2}}{{addr2}}<br>{{/addr2}}{{city}}, {{state}} {{zip}}<br><span class="phoneDisplay">{{phone}}<br></span><a data-listener="editAddress">Edit</a>';
 
   function setAddress(address){
     tomato.set("address", address);
     switch(page){
+      case "confirm":
       case "menu":
-        var addressHtml = Mustache.render(addressTemplate, address);
-        getElementsByClassName(elements.menu, "address")[0].innerHTML = addressHtml;
-        deliveryCheck();
+        var addressElement = getElementsByClassName(elements.menu, "address")[0];
+        if( addressElement ) {
+          var addressHtml = Mustache.render(addressTemplate, address);
+          addressElement.innerHTML = addressHtml;
+        }
+        updateFee();
         break;
       case "restaurants": downloadRestaurants(); break;
       default: break;
@@ -108,6 +119,10 @@ if(!ordrin.hasOwnProperty("emitter")){
     return tomato.get("deliveryTime");
   }
 
+  function getFormattedDeliveryTime() {
+    return formatDeliveryTime( tomato.get("deliveryTime") );
+  };
+
   function deliveryTimeExists(){
     return tomato.hasKey("deliveryTime");
   }
@@ -115,14 +130,91 @@ if(!ordrin.hasOwnProperty("emitter")){
   function setDeliveryTime(deliveryTime){
     tomato.set("deliveryTime", deliveryTime);
     switch(page){
-      case "menu": getElementsByClassName(elements.menu, "dateTime")[0].innerHTML = deliveryTime; deliveryCheck(); break;
+      case "confirm":
+      case "menu": 
+        if( !invisible ) {
+          getElementsByClassName(elements.menu, "dateTime")[0].innerHTML = formatDeliveryTime( deliveryTime ); 
+        }
+        updateFee(); 
+        break;
       case "restaurants": downloadRestaurants(); break;
       default: break;
     }
   }
 
+  function formatDeliveryTime( deliveryTime ) {
+    var formattedDelivery = '',
+        currentTime = new Date(),
+        currentDate = currentTime.getDate(),
+        dayOfWeek = [ 'Sunday', 'Monday', 'Tuesday',
+                      'Wednesday', 'Thursday', 'Friday',
+                      'Saturday' ];
+    var deliveryHour, deliveryMinutes, deliveryParts;
+
+    if( deliveryTime.toUpperCase() === 'ASAP' ) {
+      return 'ASAP';
+    }
+
+    if( ! (deliveryTime instanceof Date) ) {
+      deliveryParts = deliveryTime.match(/(\d+)\D+(\d+)\D+(\d+)\D(\d+)/)
+      deliveryTime = new Date();
+      deliveryTime.setMonth( parseInt( deliveryParts[1] ) - 1 );
+      deliveryTime.setDate( deliveryParts[2] );
+      deliveryTime.setHours( deliveryParts[3] );
+      deliveryTime.setMinutes( deliveryParts[4] );
+    }
+
+    //   --- is this still necessary?
+    // if delivery year is in the past we need to correct it
+    if( deliveryTime.getFullYear() < currentTime.getFullYear() ) {
+      // if we switched year +1, otherwise set to current year
+      if( deliveryTime.getMonth() === '0' && currentTime.getMonth() === '11' ) {
+        deliveryTime.setFullYear( currentTime.getFullYear() + 1 );
+      } else {
+        deliveryTime.setFullYear( currentTime.getFullYear() );
+      }
+    }
+
+    // today, tomorrow or future
+    if( currentDate === deliveryTime.getDate() ) {
+      formattedDelivery += "Today, ";
+    } else if( new Date(currentTime.getTime() + 86400000).getDate() === deliveryTime.getDate() ) {
+      formattedDelivery += "Tomorrow, ";
+    } else {
+      formattedDelivery += ( deliveryTime.getMonth() + 1 ) + '-'
+                         + ( deliveryTime.getDate() ) + ", ";
+    }
+    
+    // day of week
+    formattedDelivery += dayOfWeek[ deliveryTime.getDay() ] + ' ';
+  
+    deliveryHour = deliveryTime.getHours();
+    if( deliveryHour > 12 ) {
+      deliveryHour = deliveryHour - 12;
+    } else if ( deliveryHour === 0 ) {
+      deliveryHour = 12;
+    }
+
+    deliveryMinutes = deliveryTime.getMinutes();
+    if( deliveryMinutes < 10 ) {
+      deliveryMinutes = '0' + deliveryMinutes;
+    }
+
+    // AM/PM
+    formattedDelivery += (deliveryTime.getHours() < 11) 
+                             ? deliveryHour + ':' + deliveryMinutes + 'AM'
+                             : deliveryHour + ':' + deliveryMinutes + 'PM';
+    
+    return formattedDelivery;
+  }
+
   function getTray(){
-    return tomato.get("tray");
+    var tray = tomato.get("tray");
+    // IE8 has issues stripping off the prototype methods, so we have to recreate
+    if( !tray.getSubtotal ) {
+      tray = new Tray( tray.items );
+    }
+    return tray;
   }
 
   function trayExists(){
@@ -134,20 +226,47 @@ if(!ordrin.hasOwnProperty("emitter")){
     tomato.set("tray", tray);
   }
 
+  function initTrayFromString(str) {
+    var newtray = buildTrayFromString(str),
+      id;
+
+    if( newtray.items ) {
+      for( id in newtray.items ) {
+        if( newtray.items.hasOwnProperty(id) ) {
+          addTrayItem(newtray.items[id]);
+        }
+      }
+    }
+  };
+
   function getTip(){
-    return tomato.get("tip");
+    return tomato.get("tip") ? tomato.get("tip") : 0.00;
   }
 
-  function setRestaurant(rid, newMenu){
+  function setRestaurant(rid, newMenu, details){
+    page = "menu";
     setRid(rid);
     if(newMenu){
+      if( details ) {
+        setDetails( details );
+      }
       setMenu(newMenu);
-      renderMenu(newMenu);
+      if(!trayExists() && tomato.hasKey("trayString")){
+        setTray(buildTrayFromString(tomato.get("trayString")));
+      } 
+      if( !invisible ) {
+        renderMenu(newMenu);
+      }
+      processNewMenuPage();
     } else {
       if(!noProxy){
         api.restaurant.getDetails(rid, function(err, data){
           setMenu(data.menu);
-          renderMenu(data.menu);
+          delete data.menu;
+          setDetails(data);
+          if( !invisible ) {
+            renderMenu(data.menu);
+          }
         });
       }
     }
@@ -169,26 +288,41 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     listen("click", document.body, clicked);
     listen("change", getElementsByClassName(elements.menu, "ordrinDateSelect")[0], dateSelected);
+    setDeliveryTime( getDeliveryTime() );
     updateFee();
   }
 
   function renderMenu(menuData){
+    var menu_div = document.getElementById("ordrinMenu");
+    if( !menu_div ) {
+      setTimeout( function() { renderMenu(menuData), 1000 } );
+      return;
+    }
+
     var data = {menu:menuData, deliveryTime:getDeliveryTime()};
     data.confirmUrl = tomato.get("confirmUrl");
     if(tomato.hasKey("address")){
       data.address = getAddress();
     }
+    if(tomato.hasKey("details")) {
+      data.details = getDetails();
+    }
     var menuHtml = Mustache.render(tomato.get("menuTemplate"), data);
-    document.getElementById("ordrinMenu").innerHTML = menuHtml;
-    processNewMenuPage();
+
+    menu_div.innerHTML = menuHtml;
   }
+
+
 
   function initMenuPage(){
     if(render){
-      setRestaurant(getRid(), getMenu());
+      setRestaurant(getRid(), getMenu(), getDetails());
     } else {
       if(menuExists()){
         setMenu(getMenu());
+        if(detailsExists()) {
+          setDetails(getDetails());
+        }
       } else {
         api.restaurant.getDetails(getRid(), function(err, data){
           setMenu(data.menu);
@@ -234,30 +368,47 @@ if(!ordrin.hasOwnProperty("emitter")){
     return new Tray(items);
   }
 
-  function renderConfirm(tray){
+  function renderConfirm(tray, details){
+    var confirmDiv = document.getElementById("ordrinConfirm");
+    if( !confirmDiv ) {
+      setTimeout( function() { renderConfirm(tray, details), 1000 } );
+      return;
+    }
+
+
     var data = {deliveryTime:getDeliveryTime(), address:getAddress()};
     data.tray = tray;
     data.checkoutUri = tomato.get("checkoutUri");
     data.rid = getRid();
+    if( details ) {
+      data.details = details;
+    }
     var confirmHtml = Mustache.render(tomato.get("confirmTemplate"), data);
-    var confirmDiv = document.getElementById("ordrinConfirm");
     confirmDiv.innerHTML = confirmHtml;
-    processNewMenuPage();
   }
 
   function initConfirmPage(){
+    page = "confirm";
     if(menuExists()){
       if(!trayExists()){
         setTray(buildTrayFromString(tomato.get("trayString")));
       }
-      renderConfirm(getTray());
+      if( !invisible ) {
+        renderConfirm(getTray());
+      }
+      processNewMenuPage();
     } else {
       api.restaurant.getDetails(getRid(), function(err, data){
         setMenu(data.menu);
+        delete data.menu;
+        setDetails(data);
         if(!trayExists()){
           setTray(buildTrayFromString(tomato.get("trayString")));
+        } 
+        if( !invisible ) {
+          renderConfirm(getTray(), getDetails());
         }
-        renderConfirm(getTray());
+        processNewMenuPage();
       });
     }
   }
@@ -285,7 +436,9 @@ if(!ordrin.hasOwnProperty("emitter")){
         for(var i=0; i<data.length; i++){
           data[i].is_delivering = !!(data[i].is_delivering);
         }
-        renderRestaurants(data);
+        if( !invisible ) {
+          renderRestaurants(data);
+        }
       });
     }
   }
@@ -325,6 +478,8 @@ if(!ordrin.hasOwnProperty("emitter")){
   //All prices should be in cents
 
   function toCents(value){
+    if( !value ) { return 0; }
+
     if(value.indexOf('.') < 0){
       return (+value)*100;
     } else {
@@ -343,6 +498,15 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function toDollars(value){
+    if( !value ) {
+      return '0.00';
+    }
+
+    value = value.toString();
+    if( value.indexOf('.') !== -1 ) {       
+      return value;
+    } 
+
     var cents = value.toString();
     while(cents.length<3){
       cents = '0'+cents;
@@ -354,31 +518,117 @@ if(!ordrin.hasOwnProperty("emitter")){
   tomato.register("ordrinApi", [Option, TrayItem, Tray, Address])
 
   function updateTip(){
-    var tip = toCents(getElementsByClassName(elements.menu, "tipInput")[0].value+"");
-    tomato.set("tip", tip);
+    var tipNodes = getElementsByClassName(elements.menu, "tipInput"),
+        tip;
+
+    if( tipNodes && tipNodes.length > 0 ) {
+      tip = toCents(tipNodes[0].value+"");
+      tomato.set("tip", tip);
+    }
+
     updateFee();
   }
 
   function updateFee(){
+    // if we don't have an address we can't do fee update
+    if( typeof getAddress().addr == 'undefined' ) {
+      return;
+    }
+
+    // check if we should show provider
+    if( tomato.get( "details" ).rds_info.name  !== "Ordr.in" ) {
+      var provider = getElementsByClassName(elements.menu, "provider")[0];
+      if( provider ) {
+        provider.className = provider.className.replace(/\s*hidden\s*/,'');
+      }
+    }
+
+    var subtotalElem = getElementsByClassName(elements.menu, "subtotalValue")[0];
+    var tipElem = getElementsByClassName(elements.menu, "tipValue")[0];
+    var countElem = getElementsByClassName(elements.menu, "itemCount")[0];
+
     var subtotal = getTray().getSubtotal();
-    getElementsByClassName(elements.menu, "subtotalValue")[0].innerHTML = toDollars(subtotal);
+    if( subtotalElem ) {
+      subtotalElem.innerHTML = toDollars(subtotal);
+    }
+
+    if( countElem ) {
+      var size = function(obj) {
+        var size = 0, key;
+        for (key in obj) {
+          if (obj.hasOwnProperty(key)) size += obj[key].quantity;
+        }
+        return size;
+      };
+      countElem.innerHTML = size( getTray().items );
+    }
     var tip = getTip();
-    getElementsByClassName(elements.menu, "tipValue")[0].innerHTML = toDollars(tip);
+    if( tipElem && tipElem.tagName === 'INPUT') {
+      tipElem.value = toDollars(tip);
+    } else if(tipElem) {
+      tipElem.innerHTML = toDollars(tip);
+    }
     if(noProxy){
-      var total = subtotal + tip;
-      getElementsByClassName(elements.menu, "totalValue")[0].innerHTML = toDollars(total);
+      var total = subtotal + tip,
+          totalElements = getElementsByClassName(elements.menu, "totalValue")
+          i;
+        for( i = 0; i < totalElements.length; i++ ) { 
+          totalElements[i].innerHTML = toDollars(total);
+        }
     } else {
       api.restaurant.getFee(getRid(), toDollars(subtotal), toDollars(tip), getDeliveryTime(), getAddress(), function(err, data){
         if(err){
           handleError(err);
+
+        } else if(data.msg) {
+          handleError(data);
+
+        } else if(data._msg) {
+          if( data._msg.match( /normalize/i ) ) {
+            validAddress = false;
+            handleError( {msg: "We could not find your address, please check it and try again."} );
+            return;
+          }
+          handleError({msg:data._msg});
+
         } else {
+          validAddress = true;
+          var deliveryTime = getElementsByClassName(elements.menu, "deliveryTimeValue");
+          for( var i = 0; i < deliveryTime.length; i++ ) {
+            deliveryTime[i].innerHTML = data.del ? data.del : 'TBD';
+          }
+          var minOrder = getElementsByClassName(elements.menu, "minOrderValue");
+          for( var j = 0; j < minOrder.length; j++ ) {
+            mino = data.mino ? data.mino : 'TBD'
+            minOrder[j].innerHTML = mino;
+          }
+
           // Check what to do with fee and tax values
-          getElementsByClassName(elements.menu, "feeValue")[0].innerHTML = data.fee;
-          getElementsByClassName(elements.menu, "taxValue")[0].innerHTML = data.tax;
-          var total = subtotal + tip + toCents(data.fee) + toCents(data.tax);
-          getElementsByClassName(elements.menu, "totalValue")[0].innerHTML = toDollars(total);
+          var feeValues = getElementsByClassName(elements.menu, "feeValue");
+          for( var i = 0; i < feeValues.length; i++ ) {
+            feeValues[i].innerHTML = data.fee ? data.fee : "TBD";
+          }
+          var taxElem = getElementsByClassName(elements.menu, "taxValue")[0];
+          if( taxElem ) {
+            taxElem.innerHTML = data.tax ? data.tax : "0.00";
+          }
+          var total = subtotal + tip + toCents(data.fee) + toCents(data.tax),
+              totalElements = getElementsByClassName(elements.menu, "totalValue")
+              i;
+          for( i = 0; i < totalElements.length; i++ ) {
+            totalElements[i].innerHTML = toDollars(total);
+          };
+          meals = data.meals;
+          delivery = data.delivery;
           if(data.delivery === 0){
             handleError({delivery:0, msg:data.msg});
+          } else {
+            hideErrorDialog();
+            // unhide details element if it exists
+            var featDetails = document.getElementById('feat-details');
+            if( featDetails ) {
+              featDetails.className = featDetails.className.replace(/\s*hidden\s*/,'')
+            }
           }
         }
       });
@@ -386,28 +636,44 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function hideElement(element){
+    if( !element ) { return; }
     element.className += " hidden";
+    if(element == OuterToggledElt) {
+      OuterToggledElt = null;
+    }
   }
 
-  function unhideElement(element){
+  function unhideElement(element, hasOuterToggle){
+    if( !element ) { return; }
     element.className = element.className.replace(/\s?\bhidden\b\s?/g, ' ').replace(/(\s){2,}/g, '$1');
+    if( hasOuterToggle ) {
+      OuterToggledElt = element;
+    }
   }
 
-  function toggleHideElement(element){
+  //hasOuterToggle means the dialog closes if they click anywhere outside of the dialog
+  //hasOuterToggle really onlly matters for unhiding - since hide can check for equality
+  //unhide instead of show makes me sad
+  function toggleHideElement(element, hasOuterToggle ){
+    hasOuterToggle = hasOuterToggle === true ? true : false;
     if(/\bhidden\b/.test(element.className)){
-      unhideElement(element);
+      unhideElement(element, hasOuterToggle);
     } else {
       hideElement(element);
     }
   }
 
   function showErrorDialog(msg){
+    if( invisible ) {
+      console.log( msg );
+      return;
+    }
     // show background
-    elements.errorBg.className = elements.errorBg.className.replace("hidden", "");
+    elements.errorBg.className = elements.errorBg.className.replace(/hidden/g, "");
 
     getElementsByClassName(elements.errorDialog, "errorMsg")[0].innerHTML = msg;
     // show the dialog
-    elements.errorDialog.className = elements.errorDialog.className.replace("hidden", "");
+    elements.errorDialog.className = elements.errorDialog.className.replace(/hidden/g, "");
   }
 
   function hideErrorDialog(){
@@ -417,6 +683,10 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
   
   function listen(evnt, elem, func) {
+    if( !elem ) {
+      return;
+    }
+
     if (elem.addEventListener)  // W3C DOM
       elem.addEventListener(evnt,func,false);
     else if (elem.attachEvent) { // IE DOM
@@ -441,6 +711,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function clearNode(node){
+    if( !node ) { return; }
     while(node.firstChild){
       node.removeChild(node.firstChild);
     }
@@ -471,7 +742,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function populateAddressForm(){
-    if(addressExists()){
+    if(addressExists() && document.forms["ordrinAddress"]){
       var address = getAddress();
       var form = document.forms["ordrinAddress"];
       form.addr.value = address.addr || '';
@@ -496,9 +767,13 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function initializeDateForm(){
+    var parts, timepart, thehour, thedate, thetime, thehalf;
+    var form = document.forms["ordrinDateTime"];
+    if( !form || !form.date ) {
+      return;
+    }
     var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    var form = document.forms["ordrinDateTime"];
     var date = new Date();
     var option = document.createElement("option");
     option.setAttribute("value", padLeft(date.getMonth()+1, 2)+'-'+padLeft(date.getDate(), 2));
@@ -516,6 +791,27 @@ if(!ordrin.hasOwnProperty("emitter")){
     option.setAttribute("value", padLeft(date.getMonth()+1, 2)+'-'+padLeft(date.getDate(), 2));
     option.innerHTML = months[date.getMonth()]+" "+date.getDate()+', '+days[date.getDay()];
     form.date.appendChild(option);
+
+    parts = ordrin.init.deliveryTime.split('+');
+    if( parts.length === 2 ) {
+      thedate = parts[0];
+      form.date.value = thedate;
+
+      timepart = parts[1].split(':');
+      thehour = parseInt( timepart[0], 10 );
+      if( thehour > 12 ) {
+        thehour = padLeft(thehour - 12, 2);
+        thehalf = 'PM';
+      } else if( thehour === 12 ) {
+        thehour = padLeft(thehour, 2);
+        thehalf = 'PM';
+      } else {
+        thehour = padLeft(thehour, 2);
+        thehalf = 'AM';
+      }
+      form.time.value = [thehour,timepart[1]].join(':');
+      form.ampm.value = thehalf;
+    }
   }
 
   function clicked(event){
@@ -539,13 +835,27 @@ if(!ordrin.hasOwnProperty("emitter")){
       confirmOrder : confirmOrder
     }
     var node = event.srcElement;
+
+        //if we have a live toggled node and the clicked element is *not* a child
+        //of that node then we want to short circuit and hit the toggle
+    var isChildOfToggledElt = OuterToggledElt ? OuterToggledElt.contains(node) : false,
+        doToggle            = OuterToggledElt && ! isChildOfToggledElt;
+
     while(!node.hasAttribute("data-listener")){
       if(node.tagName.toUpperCase() === "HTML"){
+        //if we reach the top of the page w/out a listener, check for toggle
+        if( doToggle ) { toggleHideElement( OuterToggledElt ) }
         return;
       }
       node = node.parentNode;
     }
     var name = node.getAttribute("data-listener");
+
+    //if we found a listener, ignore it if we're supposed to toggle
+    if( doToggle ) {
+      toggleHideElement( OuterToggledElt );
+      return;
+    }
 
     if (typeof routes[name] != "undefined"){
       routes[name](node);
@@ -558,47 +868,79 @@ if(!ordrin.hasOwnProperty("emitter")){
       handleError({msg:"No address set"});
       return;
     }
-    if(!delivery){
-      handleError({msg:"The restaurant will not deliver this order at this time"});
+
+    if( ! validAddress ) {
+      handleError({msg:"The restaurant does not deliver to your address."});
       return;
     }
+
+    if(!delivery){
+      handleError({msg:"The restaurant is not open for online ordering at this time."});
+      return;
+    }
+
+    if( getTray().getTotal() < ( mino * 100 ) ) {
+      handleError({msg:"The minimum order for this restaruant is $" + mino + "."});
+      return;
+    }
+
     var address = getAddress()
-    form.addr.value = address.addr || '';
-    form.addr2.value = address.addr2 || '';
-    form.city.value = address.city || '';
-    form.state.value = address.state || '';
-    form.zip.value = address.zip || '';
-    form.phone.value = address.phone || '';
-    form.dateTime.value = getDeliveryTime();
-    form.tray.value = getTray().buildTrayString();
-    form.tip.value = tomato.get("tip");
-    form.rid.value = getRid();
-    form.submit();
+    if( !invisible ) {
+      form.addr.value = address.addr || '';
+      form.addr2.value = address.addr2 || '';
+      form.city.value = address.city || '';
+      form.state.value = address.state || '';
+      form.zip.value = address.zip || '';
+      form.phone.value = address.phone || '';
+      form.dateTime.value = getDeliveryTime();
+      form.tray.value = getTray().buildTrayString();
+      form.tip.value = tomato.get("tip");
+      form.rid.value = getRid();
+      form.submit();
+    }
+
+    emitter.emit("order.confirmed", true);
   }
 
   function showAddressForm(){
-    toggleHideElement(getElementsByClassName(elements.menu, "addressForm")[0]);
+    toggleHideElement(getElementsByClassName(elements.menu, "addressForm")[0], true );
   }
 
   function showDateTimeForm(){
-    toggleHideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0]);
+    toggleHideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0], true );
     dateSelected();
   }
 
   function saveDateTimeForm(){
     var form = document.forms["ordrinDateTime"];
     var date = form.date.value;
+    var deliveryTime, deliveryParts, dateTime; 
+    hideErrorDialog();
     if(date === "ASAP"){
       setDeliveryTime("ASAP");
     } else {
+      var now = new Date();
       var split = form.time.value.split(":");
       var hours = split[0]==="12"?0:+split[0];
       var minutes = +split[1];
       if(form.ampm.value === "PM"){
         hours += 12;
       }
-      
       var time = padLeft(hours,2)+":"+padLeft(minutes,2);
+      dateTime = date+"+"+time;
+
+      deliveryParts = dateTime.match(/(\d+)\D+(\d+)\D+(\d+)\D(\d+)/)
+      deliveryTime = new Date();
+      deliveryTime.setMonth( parseInt( deliveryParts[1] ) - 1 );
+      deliveryTime.setDate( deliveryParts[2] );
+      deliveryTime.setHours( deliveryParts[3] );
+      deliveryTime.setMinutes( deliveryParts[4] );
+
+      if( deliveryTime < now ) {
+        showErrorDialog( "Selected time is in the past." );
+        return;
+      }
+      
       setDeliveryTime(date+"+"+time);
     }
     hideElement(getElementsByClassName(elements.menu, "dateTimeForm")[0]);
@@ -636,10 +978,13 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function getElementsByClassName(node, className){
+    if( !node ) {
+      return [];
+    }
     if(typeof node.getElementsByClassName !== "undefined"){
       return node.getElementsByClassName(className);
     }
-    var re = new RegExp("\\b"+className+"\\b");
+    var re = new RegExp("(?:\\s|^)"+className+"(?:\\s|$)");
     var nodes = [];
     for(var i=0; i<node.children.length; i++){
       var child = node.children[i];
@@ -653,14 +998,39 @@ if(!ordrin.hasOwnProperty("emitter")){
 
   function createDialogBox(node){
     var itemId = node.getAttribute("data-miid");
-    buildDialogBox(itemId);
-    showDialogBox();
+    var isAvailable = false;
+
+    for( var availMeal in allItems[itemId].availability ) {
+      if( !meals ) {
+        isAvailable = true;
+        break;
+      }
+      for( var meal in meals) {
+        if( allItems[itemId].availability[ availMeal ] == meals[ meal ] ) { // check
+          isAvailable = true;
+          break;
+        }
+        if( isAvailable ) { break; }
+      } 
+    }
+
+    if( isAvailable ) {
+      buildDialogBox(itemId);
+      showDialogBox( node );
+      emitter.emit("menuitem.shown", true);
+      hideErrorDialog();
+    } else {
+      handleError( { msg : "Sorry, this item is not currently available" } );
+    }
   }
 
   function createEditDialogBox(node){
     var itemId = node.getAttribute("data-miid");
     var trayItemId = node.getAttribute("data-tray-id");
     var trayItem = getTray().items[trayItemId];
+    if( !trayItem.hasOptionSelected ) {
+      trayItem = new TrayItem( trayItem['id'], trayItem['quantity'], trayItem['options'], trayItem['name'], trayItem['price'] );
+    }
     buildDialogBox(itemId);
     var options = getElementsByClassName(elements.dialog, "option");
     for(var i=0; i<options.length; i++){
@@ -669,11 +1039,14 @@ if(!ordrin.hasOwnProperty("emitter")){
       checkbox.checked = trayItem.hasOptionSelected(optId);
     }
     var button = getElementsByClassName(elements.dialog, "buttonRed")[0];
-    button.setAttribute("value", "Save to Tray");
+    if( button ) {
+      button.setAttribute("value", "Save to Tray");
+    }
     var quantity = getElementsByClassName(elements.dialog, "itemQuantity")[0];
     quantity.setAttribute("value", trayItem.quantity);
     elements.dialog.setAttribute("data-tray-id", trayItemId);
-    showDialogBox();
+    showDialogBox( node );
+    emitter.emit("menuitem.shown", true);
   }
 
   function buildDialogBox(id){
@@ -681,7 +1054,14 @@ if(!ordrin.hasOwnProperty("emitter")){
     elements.dialog.setAttribute("data-miid", id);
   }
   
-  function showDialogBox(){
+  function showDialogBox( node ){
+    // if in an iframe, fix top
+    if( top !== self && document.body.scrollTop === 0 ) {
+      elements.dialog.style.top =  ( node.offsetTop - 250 ) + "px";
+    } else {
+      elements.dialog.style.top =  "0px";
+    }
+
     // show background
     elements.dialogBg.className = elements.dialogBg.className.replace("hidden", "");
 
@@ -715,14 +1095,14 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
     if(checked<min){
       error = true;
-      var errorText = "You must select at least "+min+" options";
+      var errorText = "You must select at least "+min+" option" + (min === 1 ? '' : 's');
       var error = document.createTextNode(errorText);
       errorNode.appendChild(error);
       return false;
     }
     if(max>0 && checked>max){
       error = true;
-      var errorText = "You must select at most "+max+" options";
+      var errorText = "You must select at most "+max+" option" + (min === 1 ? '' : 's');
       var error = document.createTextNode(errorText);
       errorNode.appendChild(error);
       return false;
@@ -776,10 +1156,15 @@ if(!ordrin.hasOwnProperty("emitter")){
 
   function addDialogItemToTray(){
     var trayItem = createItemFromDialog();
+    if(!addressExists()){
+      handleError({msg:"We need your address to be sure this restaurant delivers to you. Please enter it."});
+      hideDialogBox();
+      return;
+    }
     addTrayItem(trayItem);
     hideDialogBox();
     if(!delivery){
-      handleError({msg:"The restaurant will not deliver to this address at the chosen time"});
+      handleError({msg:"The restaurant is not available for online orders to this address at the chosen time"});
     }
   }
 
@@ -807,9 +1192,14 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function handleError(error){
-    console.log(error);
+    if( invisible ) {
+      emitter.emit("ordrin.error", error);
+      return;
+    }
     if(typeof error === "object" && typeof error.msg !== "undefined"){
       showErrorDialog(error.msg);
+    } else if (typeof error === "object" && typeof error._msg !== "undefined") {
+      showErrorDialog(error._msg);
     } else {
       showErrorDialog(JSON.stringify(error));
     }
@@ -823,6 +1213,7 @@ if(!ordrin.hasOwnProperty("emitter")){
   }
 
   function addTrayItemNode(item){
+    if( !elements.tray ) { return; }
     var newNode = renderItemHtml(item);
     var pageTrayItems = getElementsByClassName(elements.tray, "trayItem");
     for(var i=0; i<pageTrayItems.length; i++){
@@ -865,12 +1256,16 @@ if(!ordrin.hasOwnProperty("emitter")){
       setDeliveryTime : setDeliveryTime,
       getTray : getTray,
       setTray : setTray,
+      initTrayFromString : initTrayFromString,
+      updateTip : updateTip,
       getTip : getTip,
-      setRestaurant : setRestaurant
+      setRestaurant : setRestaurant,
+      initConfirmPage : initConfirmPage,
+      clicked : clicked
     };
     emitter.on("tray.add", addTrayItemNode);
     emitter.on("tray.remove", removeTrayItemNode);
-    emitter.on("tray.*", updateFee);
+    emitter.on("tray.*", updateTip);
     emitter.emit("moduleLoaded.mustard", ordrin.mustard);
   };
   
