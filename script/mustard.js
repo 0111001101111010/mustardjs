@@ -987,7 +987,7 @@ var ordrin = typeof ordrin === "undefined" ? {} : ordrin;
     };
 
     var formatPhoneNumber = function formatPhoneNumber(){
-      this.phone = this.phone.substring(0, 3) + "-" + this.phone.substring(3, 6) + "-" + this.phone.substring(6);
+      that.phone = that.phone.substring(0, 3) + "-" + that.phone.substring(3, 6) + "-" + that.phone.substring(6);
     };
     validate();
   };
@@ -2507,7 +2507,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
 
     // check if we should show provider
-    if( tomato.get( "details" ).rds_info.name  !== "Ordr.in" ) {
+    if( tomato.get('details').rds_info &&  tomato.get( "details" ).rds_info.name  !== "Ordr.in" ) {
       var provider = getElementsByClassName(elements.menu, "provider")[0];
       if( provider ) {
         provider.className = provider.className.replace(/\s*hidden\s*/,'');

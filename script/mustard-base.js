@@ -536,7 +536,7 @@ if(!ordrin.hasOwnProperty("emitter")){
     }
 
     // check if we should show provider
-    if( tomato.get( "details" ).rds_info.name  !== "Ordr.in" ) {
+    if( tomato.get('details').rds_info &&  tomato.get( "details" ).rds_info.name  !== "Ordr.in" ) {
       var provider = getElementsByClassName(elements.menu, "provider")[0];
       if( provider ) {
         provider.className = provider.className.replace(/\s*hidden\s*/,'');
